@@ -23,6 +23,7 @@ public class TimeLogDao {
     private final String SQL_GET_LOGS = "SELECT * FROM TimeLog WHERE WorkDay BETWEEN ? AND ?";
     private final String SQL_GET_ALL_LOGS = "SELECT * FROM TimeLog";
     private final String SQL_GET_LOGS_WITH_LIMIT = "SELECT * FROM TimeLog ORDER BY WorkDay DESC LIMIT ?";
+    private final String SQL_GET_BALANCE = "SELECT SUM(WorkedHours - DueHours) FROM TimeLog";
 
     public TimeLogDao() {
         this.cm = new ConnectionManager();
@@ -120,5 +121,22 @@ public class TimeLogDao {
             dialog.displaySimpleDialog("Fel vid hämtning från databas", stacktrace);
         }
         return list;
+    }
+    public double getTimeBalance() throws IOException {
+        ResultSet resultSet = null;
+        try (Connection connection = cm.openConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(SQL_GET_BALANCE)){
+            resultSet = preparedStatement.executeQuery();
+            if (resultSet.next()){
+                return resultSet.getDouble(1);
+            }
+        } catch (SQLException sqle) {
+            String stacktrace = String.format("%d%n%s%n%s%n", sqle.getErrorCode(),
+                    sqle.getSQLState(), sqle.getMessage());
+            DisplayDialog dialog = new DisplayDialog();
+            dialog.displaySimpleDialog("Fel vid hämtning från databas", stacktrace);
+
+        }
+        return 0.0;
     }
 }

@@ -13,16 +13,16 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
+import javafx.util.StringConverter;
 import model.TimeLog;
 import observer.TimeLogObserver;
 import utils.DisplayDialog;
 import utils.Utils;
 
 import java.io.IOException;
-import java.text.DecimalFormat;
-import java.text.ParsePosition;
 import java.time.LocalDate;
-import java.util.Locale;
+import java.util.function.UnaryOperator;
+import java.util.regex.Pattern;
 
 public class WindowController implements TimeLogObserver {
     private FlexController flexController;
@@ -117,6 +117,18 @@ public class WindowController implements TimeLogObserver {
     @FXML
     private Label labelLunch;
 
+    @FXML
+    private Label labelBalance;
+
+    @FXML
+    private TextField textFieldBalance;
+
+    @FXML
+    private TextArea textAreaErrorPrompt;
+
+    @FXML
+    private MenuItem menuItemOpenDB;
+
     private ObservableList<TimeLog> data;
 
 
@@ -126,42 +138,76 @@ public class WindowController implements TimeLogObserver {
 
     @FXML
     public void initialize() throws IOException {
-        textFieldPlannedHours.setText(String.valueOf(flexController.getDueHours()));
         flexController.addListener(this);
         initTextFormatter(textFieldWorkedHours);
         initTextFormatter(textFieldPlannedHours);
+        textFieldPlannedHours.setText(String.valueOf(flexController.getDueHours()));
         initTextFormatter(textFieldLunch);
         datePicker.setValue(LocalDate.now());
+
         data = FXCollections.observableArrayList(flexController.getTimeLogsWithLimit(5));
         tableColumnDate.setCellValueFactory(new PropertyValueFactory<TimeLog, LocalDate>("workDay"));
         tableColumnWorkedHours.setCellValueFactory(new PropertyValueFactory<TimeLog, Double>("workedHours"));
         tableColumntBalance.setCellValueFactory(new PropertyValueFactory<TimeLog, Double>("balance"));
         tableColumntComment.setCellValueFactory(new PropertyValueFactory<TimeLog, String>("comment"));
         tableView.setItems(data);
+
+        textFieldBalance.setText(String.valueOf(flexController.getTimeBalance()));
     }
+
+    //Sets inputcontrol for textfields to only accept integers or doubles
     private void initTextFormatter(TextInputControl textInputControl){
-        DecimalFormat format = (DecimalFormat) DecimalFormat.getInstance(Locale.US);
+        Pattern validEditingState = Pattern.compile("-?(([1-9][0-9]*)|0)?(\\.[0-9]*)?");
 
-        textInputControl.setTextFormatter( new TextFormatter<>(c ->
-        {
-            if ( c.getControlNewText().isEmpty() )
-            {
-                return c;
+        UnaryOperator<TextFormatter.Change> filter = c -> {
+            String text = c.getControlNewText();
+            if (validEditingState.matcher(text).matches()) {
+                return c ;
+            } else {
+                return null ;
+            }
+        };
+
+        StringConverter<Double> converter = new StringConverter<Double>() {
+
+            @Override
+            public Double fromString(String s) {
+                if (s.isEmpty() || "-".equals(s) || ".".equals(s) || "-.".equals(s)) {
+                    return 0.0;
+                } else {
+                    return Double.valueOf(s);
+                }
             }
 
-            ParsePosition parsePosition = new ParsePosition( 0 );
-            Object object = format.parse( c.getControlNewText(), parsePosition );
 
-            if ( object == null || parsePosition.getIndex() < c.getControlNewText().length() )
-            {
-                return null;
+            @Override
+            public String toString(Double d) {
+                return d.toString();
             }
-            else
-            {
-                return c;
-            }
-        }));
+        };
 
+        TextFormatter<Double> textFormatter = new TextFormatter<>(converter, 0.0, filter);
+        textInputControl.setTextFormatter(textFormatter);
+//        DecimalFormat format = (DecimalFormat) DecimalFormat.getInstance(Locale.US);
+//        textInputControl.setTextFormatter( new TextFormatter<>(c ->
+//        {
+//            if ( c.getControlNewText().isEmpty() )
+//            {
+//                return c;
+//            }
+//
+//            ParsePosition parsePosition = new ParsePosition( 0 );
+//            Object object = format.parse( c.getControlNewText(), parsePosition );
+//
+//            if ( object == null || parsePosition.getIndex() < c.getControlNewText().length() )
+//            {
+//                return null;
+//            }
+//            else
+//            {
+//                return c;
+//            }
+//        }));
     }
 
     @FXML
@@ -181,16 +227,10 @@ public class WindowController implements TimeLogObserver {
         String text = "";
         if (isParseOK){
             if (flexController.addToLog(timeLog)){
-                FXMLLoader loader = new FXMLLoader(getClass().getResource("/fx/SimpleStringDialog.fxml"));
-                Parent root = loader.load();
-                SimpleStringDialogController simpleStringDialogController = loader.getController();
-                simpleStringDialogController.initStrings("Tidsregistrering klar",
+                DisplayDialog dialog = new DisplayDialog();
+                dialog.displaySimpleDialog("Tidsregistrering klar",
                         String.format("Dagens arbetstid på %.1f är registrerad. %nDitt saldo för dagen är %.1f timmar.",
-                        timeLog.getWorkedHours(), timeLog.getBalance()));
-                Stage dialogStage = new Stage();
-                dialogStage.setTitle("Information");
-                dialogStage.setScene(new Scene(root, 400, 300));
-                dialogStage.show();
+                                timeLog.getWorkedHours(), timeLog.getBalance()));
                 textFieldWorkedHours.setText("");
                 textFieldLunch.setText("");
             }
@@ -199,7 +239,18 @@ public class WindowController implements TimeLogObserver {
 
     @FXML
     private void setButtonGenerateTimeAction(ActionEvent event){
-        textFieldWorkedHours.setText();
+        String arrived = textFieldArriveAtWork.getText();
+        String left = textFieldLeftWork.getText();
+        double time = Utils.timeParser(arrived, left);
+        if (time < 0) {
+            textAreaErrorPrompt.setText("Du kan ange klockslagen i följande format:\n" +
+                                        "0800 eller 08:00");
+        } else {
+            textFieldWorkedHours.setText(String.valueOf(Utils.timeParser(arrived, left)));
+            textFieldLunch.requestFocus();
+            textAreaErrorPrompt.setText("");
+
+        }
     }
 
     @FXML
@@ -209,14 +260,37 @@ public class WindowController implements TimeLogObserver {
     }
 
     @FXML
+    private void setMenuItemOpenDBAction(ActionEvent event) throws IOException {
+        DisplayDialog dialog = new DisplayDialog();
+        dialog.displaySimpleDialog("Fel", "Inte implementerat ännu.");
+//        FileChooser fileChooser = new FileChooser();
+//        fileChooser.setTitle("Välj databasfil");
+//        fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Sqlitedatabas",
+//                                                                                "*.db"));
+//        File selectedfile = fileChooser.showOpenDialog(menuBar.getScene().getWindow());
+//
+    }
+
+    @FXML
     private void setMenuItemAboutAction(ActionEvent event) throws IOException {
         DisplayDialog dialog = new DisplayDialog();
         dialog.displaySimpleDialog("FlexTid","Applikationen är skapad av Fredrik Harnevik");
     }
 
+    @FXML
+    private void setButtonShowTimeLogsAction(ActionEvent event) throws IOException {
+        Stage timeLogStage = new Stage();
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fx/TableWindow.fxml"));
+        Parent root = loader.load();
+        timeLogStage.setTitle("Visa tidsregistreringar");
+        timeLogStage.setScene(new Scene(root, 500, 600));
+        timeLogStage.show();
+    }
+
+
     @Override
     public void update() throws IOException {
         tableView.setItems(FXCollections.observableArrayList(flexController.getTimeLogsWithLimit(5)));
-
+        textFieldBalance.setText(String.valueOf(flexController.getTimeBalance()));
     }
 }

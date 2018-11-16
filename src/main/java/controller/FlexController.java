@@ -23,21 +23,17 @@ public class FlexController extends TimeLogObservable {
         boolean isInsertOK = timeLogDao.insertTimeLog(timeLog);
         super.notifyTimeLogObservers();
         return isInsertOK;
-
     }
 
     public ArrayList<TimeLog> getTimeLogs(LocalDate fromDate, LocalDate toDate) throws IOException {
-        return timeLogDao.getTimeLogs(fromDate, toDate);
+        timeLogArrayList = timeLogDao.getTimeLogs(fromDate, toDate);
+        return timeLogArrayList;
     }
     public ArrayList<TimeLog> getTimeLogsWithLimit(int limit) throws IOException {
         return timeLogDao.getLogsWithLimit(limit);
     }
-    public double getTimeBalance(){
-        double balance = 0;
-        for (TimeLog log : timeLogArrayList){
-            balance += log.getWorkedHours() - log.getDueHours();
-        }
-        return balance;
+    public double getTimeBalance() throws IOException {
+        return timeLogDao.getTimeBalance();
     }
 
     public double getDueHours() {
