@@ -1,10 +1,12 @@
 package main;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 
 public class Main extends Application {
 
@@ -15,6 +17,8 @@ public class Main extends Application {
         primaryStage.setTitle("FlexTid");
         primaryStage.setScene(new Scene(root, 800, 600));
         primaryStage.show();
-
+        primaryStage.setOnCloseRequest(event -> {
+            Platform.exit();
+        });
     }
 }

@@ -139,10 +139,10 @@ public class WindowController implements TimeLogObserver {
     @FXML
     public void initialize() throws IOException {
         flexController.addListener(this);
-        initTextFormatter(textFieldWorkedHours);
-        initTextFormatter(textFieldPlannedHours);
+        Utils.initTextFormatter(textFieldWorkedHours);
+        Utils.initTextFormatter(textFieldPlannedHours);
         textFieldPlannedHours.setText(String.valueOf(flexController.getDueHours()));
-        initTextFormatter(textFieldLunch);
+        Utils.initTextFormatter(textFieldLunch);
         datePicker.setValue(LocalDate.now());
 
         data = FXCollections.observableArrayList(flexController.getTimeLogsWithLimit(5));
@@ -153,61 +153,6 @@ public class WindowController implements TimeLogObserver {
         tableView.setItems(data);
 
         textFieldBalance.setText(String.valueOf(flexController.getTimeBalance()));
-    }
-
-    //Sets inputcontrol for textfields to only accept integers or doubles
-    private void initTextFormatter(TextInputControl textInputControl){
-        Pattern validEditingState = Pattern.compile("-?(([1-9][0-9]*)|0)?(\\.[0-9]*)?");
-
-        UnaryOperator<TextFormatter.Change> filter = c -> {
-            String text = c.getControlNewText();
-            if (validEditingState.matcher(text).matches()) {
-                return c ;
-            } else {
-                return null ;
-            }
-        };
-
-        StringConverter<Double> converter = new StringConverter<Double>() {
-
-            @Override
-            public Double fromString(String s) {
-                if (s.isEmpty() || "-".equals(s) || ".".equals(s) || "-.".equals(s)) {
-                    return 0.0;
-                } else {
-                    return Double.valueOf(s);
-                }
-            }
-
-
-            @Override
-            public String toString(Double d) {
-                return d.toString();
-            }
-        };
-
-        TextFormatter<Double> textFormatter = new TextFormatter<>(converter, 0.0, filter);
-        textInputControl.setTextFormatter(textFormatter);
-//        DecimalFormat format = (DecimalFormat) DecimalFormat.getInstance(Locale.US);
-//        textInputControl.setTextFormatter( new TextFormatter<>(c ->
-//        {
-//            if ( c.getControlNewText().isEmpty() )
-//            {
-//                return c;
-//            }
-//
-//            ParsePosition parsePosition = new ParsePosition( 0 );
-//            Object object = format.parse( c.getControlNewText(), parsePosition );
-//
-//            if ( object == null || parsePosition.getIndex() < c.getControlNewText().length() )
-//            {
-//                return null;
-//            }
-//            else
-//            {
-//                return c;
-//            }
-//        }));
     }
 
     @FXML
@@ -282,11 +227,12 @@ public class WindowController implements TimeLogObserver {
         Stage timeLogStage = new Stage();
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/fx/TableWindow.fxml"));
         Parent root = loader.load();
+        TableWindowController tableWindowController = loader.getController();
+        tableWindowController.setFlexController(this.flexController);
         timeLogStage.setTitle("Visa tidsregistreringar");
-        timeLogStage.setScene(new Scene(root, 500, 600));
+        timeLogStage.setScene(new Scene(root, 520, 600));
         timeLogStage.show();
     }
-
 
     @Override
     public void update() throws IOException {

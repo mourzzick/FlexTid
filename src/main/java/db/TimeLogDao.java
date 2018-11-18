@@ -24,6 +24,9 @@ public class TimeLogDao {
     private final String SQL_GET_ALL_LOGS = "SELECT * FROM TimeLog";
     private final String SQL_GET_LOGS_WITH_LIMIT = "SELECT * FROM TimeLog ORDER BY WorkDay DESC LIMIT ?";
     private final String SQL_GET_BALANCE = "SELECT SUM(WorkedHours - DueHours) FROM TimeLog";
+    private final String SQL_UPDATE_TIMELOG = "update TimeLog " +
+                                                "set Comment = ?, WorkedHours = ?, DueHours = ? where TimeLogID = ?";
+    private final String SQL_DELETE_TIMELOG = "DELETE FROM TimeLog WHERE TimeLogID = ?";
 
     public TimeLogDao() {
         this.cm = new ConnectionManager();
@@ -138,5 +141,37 @@ public class TimeLogDao {
 
         }
         return 0.0;
+    }
+    public boolean updateTimeLog(TimeLog timeLog) throws IOException {
+        try (Connection connection = cm.openConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(SQL_UPDATE_TIMELOG)){
+            preparedStatement.setString(1, timeLog.getComment());
+            preparedStatement.setDouble(2, timeLog.getWorkedHours());
+            preparedStatement.setDouble(3, timeLog.getDueHours());
+            preparedStatement.setInt(4, timeLog.getTimeLogID());
+            preparedStatement.execute();
+            return true;
+        } catch (SQLException sqle){
+            String stacktrace = String.format("%d%n%s%n%s%n", sqle.getErrorCode(),
+                    sqle.getSQLState(), sqle.getMessage());
+            DisplayDialog dialog = new DisplayDialog();
+            dialog.displaySimpleDialog("Fel vid uppdatering", stacktrace);
+        }
+        return false;
+    }
+
+    public boolean deleteTimeLog(TimeLog timeLog) throws IOException {
+        try (Connection connection = cm.openConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(SQL_DELETE_TIMELOG)) {
+            preparedStatement.setInt(1, timeLog.getTimeLogID());
+            preparedStatement.execute();
+            return true;
+        } catch (SQLException sqle){
+            String stacktrace = String.format("%d%n%s%n%s%n", sqle.getErrorCode(),
+                    sqle.getSQLState(), sqle.getMessage());
+            DisplayDialog dialog = new DisplayDialog();
+            dialog.displaySimpleDialog("Fel vid radering från databas", stacktrace);
+        }
+        return false;
     }
 }

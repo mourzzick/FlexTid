@@ -27,7 +27,7 @@ public class SimpleStringDialogController {
         textArea.setText(text);
     }
     @FXML
-    public void setButtonOkAction(ActionEvent event){
+    private void setButtonOkAction(ActionEvent event){
         Stage stage = (Stage) buttonOK.getScene().getWindow();
         stage.close();
     }

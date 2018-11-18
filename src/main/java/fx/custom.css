@@ -10,11 +10,13 @@
     -fx-background-color: transparent;
 }
 
-
 .text-area .scroll-pane .content{
     -fx-background-color: transparent;
 }
 .text-area {
     -fx-text-align: center;
 
+}
+.text-field {
+    -fx-background-color: transparent;
 }

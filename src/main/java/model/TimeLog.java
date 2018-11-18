@@ -10,6 +10,9 @@ public class TimeLog {
     private double workedHours;
     private double dueHours;
 
+    public TimeLog() {
+    }
+
     public TimeLog(int timeLogID, LocalDate regDate, LocalDate workDay, String comment, double workedHours, double dueHours) {
         this.timeLogID = timeLogID;
         this.regDate = regDate;
@@ -25,6 +28,14 @@ public class TimeLog {
         this.comment = comment;
         this.workedHours = workedHours;
         this.dueHours = dueHours;
+    }
+
+    public int getTimeLogID() {
+        return timeLogID;
+    }
+
+    public void setTimeLogID(int timeLogID) {
+        this.timeLogID = timeLogID;
     }
 
     public LocalDate getRegDate() {

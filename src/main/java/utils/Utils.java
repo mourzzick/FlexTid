@@ -1,8 +1,14 @@
 package utils;
 
+import javafx.scene.control.TextFormatter;
+import javafx.scene.control.TextInputControl;
+import javafx.util.StringConverter;
+
 import java.time.DateTimeException;
 import java.time.Duration;
 import java.time.LocalTime;
+import java.util.function.UnaryOperator;
+import java.util.regex.Pattern;
 
 public class Utils {
     /*
@@ -30,5 +36,39 @@ public class Utils {
 
     public static double deductLunch(double workedHours, double lunch){
         return workedHours - (lunch/60);
+    }
+
+    public static void initTextFormatter(TextInputControl textInputControl){
+        Pattern validEditingState = Pattern.compile("-?(([1-9][0-9]*)|0)?(\\.[0-9]*)?");
+
+        UnaryOperator<TextFormatter.Change> filter = c -> {
+            String text = c.getControlNewText();
+            if (validEditingState.matcher(text).matches()) {
+                return c ;
+            } else {
+                return null ;
+            }
+        };
+
+        StringConverter<Double> converter = new StringConverter<Double>() {
+
+            @Override
+            public Double fromString(String s) {
+                if (s.isEmpty() || "-".equals(s) || ".".equals(s) || "-.".equals(s)) {
+                    return 0.0;
+                } else {
+                    return Double.valueOf(s);
+                }
+            }
+
+
+            @Override
+            public String toString(Double d) {
+                return d.toString();
+            }
+        };
+
+        TextFormatter<Double> textFormatter = new TextFormatter<>(converter, 0.0, filter);
+        textInputControl.setTextFormatter(textFormatter);
     }
 }

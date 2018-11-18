@@ -32,6 +32,17 @@ public class FlexController extends TimeLogObservable {
     public ArrayList<TimeLog> getTimeLogsWithLimit(int limit) throws IOException {
         return timeLogDao.getLogsWithLimit(limit);
     }
+
+    public boolean updateTimeLog(TimeLog timeLog) throws IOException {
+        boolean isUpdateOK = timeLogDao.updateTimeLog(timeLog);
+        super.notifyTimeLogObservers();
+        return isUpdateOK;
+    }
+    public boolean deleteTimeLog(TimeLog timeLog) throws IOException {
+        boolean isDeleteOK = timeLogDao.deleteTimeLog(timeLog);
+        super.notifyTimeLogObservers();
+        return isDeleteOK;
+    }
     public double getTimeBalance() throws IOException {
         return timeLogDao.getTimeBalance();
     }
