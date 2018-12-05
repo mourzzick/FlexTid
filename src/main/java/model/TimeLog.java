@@ -1,5 +1,7 @@
 package model;
 
+import utils.Utils;
+
 import java.time.LocalDate;
 
 public class TimeLog {
@@ -79,6 +81,6 @@ public class TimeLog {
     }
 
     public double getBalance(){
-        return workedHours - dueHours;
+        return Utils.round(workedHours - dueHours, 2);
     }
 }

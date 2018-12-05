@@ -3,20 +3,51 @@ package controller;
 import db.TimeLogDao;
 import model.TimeLog;
 import observer.TimeLogObservable;
+import utils.DisplayDialogs;
 
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Properties;
 
 public class FlexController extends TimeLogObservable {
     private TimeLogDao timeLogDao;
     private ArrayList<TimeLog> timeLogArrayList;
-    private double dueHours;
+    private double dueHours = 0;
+    private InputStream inputStream;
 
-    public FlexController(double dueHours) {
+    public FlexController() {
+        Properties properties = new Properties();
+        try {
+            inputStream = new FileInputStream("resources/application.config");
+            properties.load(inputStream);
+            this.dueHours = Double.parseDouble(properties.getProperty("dueHours"));
+        } catch (IOException ioe) {
+            DisplayDialogs dialogs = new DisplayDialogs();
+            try {
+                dialogs.displaySimpleDialog("Fel vid laddning av värden",
+                        "Kunde inte ladda konfigurationsfilen");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        } finally {
+            try {
+                inputStream.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+
+            }
+        }
+
         this.timeLogArrayList = new ArrayList<>();
-        this.dueHours = dueHours;
         timeLogDao = new TimeLogDao();
+    }
+
+    public double deductLunch(double workedHours, double lunch){
+        return workedHours - (lunch/60);
     }
 
     public boolean addToLog(TimeLog timeLog) throws IOException {

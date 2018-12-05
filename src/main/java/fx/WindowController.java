@@ -12,17 +12,19 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import javafx.util.StringConverter;
 import model.TimeLog;
 import observer.TimeLogObserver;
-import utils.DisplayDialog;
+import utils.DisplayDialogs;
 import utils.Utils;
 
+import java.io.File;
 import java.io.IOException;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.time.LocalDate;
-import java.util.function.UnaryOperator;
-import java.util.regex.Pattern;
+import java.util.Locale;
 
 public class WindowController implements TimeLogObserver {
     private FlexController flexController;
@@ -133,15 +135,16 @@ public class WindowController implements TimeLogObserver {
 
 
     public WindowController(){
-        this.flexController = new FlexController(7.5);
+        this.flexController = new FlexController();
     }
 
     @FXML
     public void initialize() throws IOException {
         flexController.addListener(this);
+
+        //Initializes fields to only accept doubles
         Utils.initTextFormatter(textFieldWorkedHours);
         Utils.initTextFormatter(textFieldPlannedHours);
-        textFieldPlannedHours.setText(String.valueOf(flexController.getDueHours()));
         Utils.initTextFormatter(textFieldLunch);
         datePicker.setValue(LocalDate.now());
 
@@ -152,15 +155,23 @@ public class WindowController implements TimeLogObserver {
         tableColumntComment.setCellValueFactory(new PropertyValueFactory<TimeLog, String>("comment"));
         tableView.setItems(data);
 
-        textFieldBalance.setText(String.valueOf(flexController.getTimeBalance()));
+        textFieldPlannedHours.setText(String.valueOf(flexController.getDueHours()));
+        textFieldBalance.setText(String.format("%.2f", flexController.getTimeBalance()));
     }
 
     @FXML
     private void saveButtonAction(ActionEvent event) throws IOException {
         TimeLog timeLog = null;
         boolean isParseOK;
+
+        //Check for future dates and in such case prevent user from saving data
+        if (datePicker.getValue().isAfter(LocalDate.now())){
+            DisplayDialogs dialogs = new DisplayDialogs();
+            dialogs.displaySimpleDialog("Fel!", "Du kan inte registrera ett framtida datum.");
+            return;
+        }
         try {
-            double workWithoutLunch = Utils.deductLunch(Double.parseDouble(textFieldWorkedHours.getText()),
+            double workWithoutLunch = flexController.deductLunch(Double.parseDouble(textFieldWorkedHours.getText()),
                                 Double.parseDouble(textFieldLunch.getText()));
             timeLog = new TimeLog(LocalDate.now(), datePicker.getValue(), textAreaComment.getText(),
                     workWithoutLunch, Double.parseDouble(textFieldPlannedHours.getText()));
@@ -168,16 +179,17 @@ public class WindowController implements TimeLogObserver {
         } catch (NumberFormatException nfe){
             isParseOK = false;
         }
-        String header = "";
-        String text = "";
+
         if (isParseOK){
             if (flexController.addToLog(timeLog)){
-                DisplayDialog dialog = new DisplayDialog();
+                DisplayDialogs dialog = new DisplayDialogs();
                 dialog.displaySimpleDialog("Tidsregistrering klar",
                         String.format("Dagens arbetstid på %.1f är registrerad. %nDitt saldo för dagen är %.1f timmar.",
                                 timeLog.getWorkedHours(), timeLog.getBalance()));
                 textFieldWorkedHours.setText("");
                 textFieldLunch.setText("");
+                textFieldArriveAtWork.setText("");
+                textFieldLeftWork.setText("");
             }
         }
     }
@@ -191,7 +203,7 @@ public class WindowController implements TimeLogObserver {
             textAreaErrorPrompt.setText("Du kan ange klockslagen i följande format:\n" +
                                         "0800 eller 08:00");
         } else {
-            textFieldWorkedHours.setText(String.valueOf(Utils.timeParser(arrived, left)));
+            textFieldWorkedHours.setText(String.valueOf(time));
             textFieldLunch.requestFocus();
             textAreaErrorPrompt.setText("");
 
@@ -206,19 +218,17 @@ public class WindowController implements TimeLogObserver {
 
     @FXML
     private void setMenuItemOpenDBAction(ActionEvent event) throws IOException {
-        DisplayDialog dialog = new DisplayDialog();
-        dialog.displaySimpleDialog("Fel", "Inte implementerat ännu.");
-//        FileChooser fileChooser = new FileChooser();
-//        fileChooser.setTitle("Välj databasfil");
-//        fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Sqlitedatabas",
-//                                                                                "*.db"));
-//        File selectedfile = fileChooser.showOpenDialog(menuBar.getScene().getWindow());
-//
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Välj databasfil");
+        fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Sqlitefil *.db",
+                                                                                "*.db"));
+        File selectedfile = fileChooser.showOpenDialog(menuBar.getScene().getWindow());
+        System.out.println(selectedfile.getAbsolutePath());
     }
 
     @FXML
     private void setMenuItemAboutAction(ActionEvent event) throws IOException {
-        DisplayDialog dialog = new DisplayDialog();
+        DisplayDialogs dialog = new DisplayDialogs();
         dialog.displaySimpleDialog("FlexTid","Applikationen är skapad av Fredrik Harnevik");
     }
 
@@ -237,6 +247,6 @@ public class WindowController implements TimeLogObserver {
     @Override
     public void update() throws IOException {
         tableView.setItems(FXCollections.observableArrayList(flexController.getTimeLogsWithLimit(5)));
-        textFieldBalance.setText(String.valueOf(flexController.getTimeBalance()));
+        textFieldBalance.setText(String.format("%.2f", flexController.getTimeBalance()));
     }
 }

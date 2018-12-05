@@ -4,6 +4,8 @@ import javafx.scene.control.TextFormatter;
 import javafx.scene.control.TextInputControl;
 import javafx.util.StringConverter;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.DateTimeException;
 import java.time.Duration;
 import java.time.LocalTime;
@@ -31,11 +33,7 @@ public class Utils {
         } catch (DateTimeException ex) {
             return -1.0;
         }
-        return (double) duration/60;
-    }
-
-    public static double deductLunch(double workedHours, double lunch){
-        return workedHours - (lunch/60);
+        return round((double) duration/60, 2);
     }
 
     public static void initTextFormatter(TextInputControl textInputControl){
@@ -70,5 +68,13 @@ public class Utils {
 
         TextFormatter<Double> textFormatter = new TextFormatter<>(converter, 0.0, filter);
         textInputControl.setTextFormatter(textFormatter);
+    }
+
+    public static double round(double value, int places) {
+        if (places < 0) throw new IllegalArgumentException();
+
+        BigDecimal bd = new BigDecimal(value);
+        bd = bd.setScale(places, RoundingMode.HALF_UP);
+        return bd.doubleValue();
     }
 }

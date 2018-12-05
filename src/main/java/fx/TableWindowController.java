@@ -1,6 +1,7 @@
 package fx;
 
 import controller.FlexController;
+import export.ExportService;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -12,19 +13,20 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import model.TimeLog;
-import observer.TimeLogObservable;
 import observer.TimeLogObserver;
+import org.apache.poi.ss.usermodel.Workbook;
 
-import java.io.IOException;
+import java.io.*;
 import java.time.LocalDate;
-import java.time.temporal.TemporalAdjusters;
+import java.time.format.DateTimeFormatter;
 
 public class TableWindowController implements TimeLogObserver {
 
     public TableWindowController(){
-        this.flexController = new FlexController(7.5);
+        this.flexController = new FlexController();
     }
     private FlexController flexController;
 
@@ -125,5 +127,21 @@ public class TableWindowController implements TimeLogObserver {
         data = FXCollections.observableArrayList(flexController.getTimeLogs(datePickerFrom.getValue(),
                 datePickerTo.getValue()));
         tableView.setItems(data);
+    }
+
+    @FXML
+    private void setButtonExportAction(ActionEvent event) throws IOException {
+        ExportService exportService = new ExportService();
+        Workbook workbook = exportService.exportToExcel(tableView.getItems());
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Spara dokument...");
+        fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Excelarbetsbok", "*.xlsx"));
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+        //fileChooser.setInitialFileName(String.format("%s_%s%s", "Export", dateTimeFormatter.format(LocalDateTime.now()), ".xlsx"));
+        File file = fileChooser.showSaveDialog(datePickerFrom.getScene().getWindow());
+        if (file != null) {
+        OutputStream outputStream = new FileOutputStream(file);
+        workbook.write(outputStream);
+        }
     }
 }

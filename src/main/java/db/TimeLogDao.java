@@ -1,16 +1,10 @@
 package db;
 
-import fx.SimpleStringDialogController;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.stage.Stage;
 import model.TimeLog;
-import observer.TimeLogObservable;
-import observer.TimeLogObserver;
-import utils.DisplayDialog;
+import utils.DisplayDialogs;
 
-import javax.swing.*;
 import java.io.IOException;
 import java.sql.*;
 import java.time.LocalDate;
@@ -46,7 +40,7 @@ public class TimeLogDao {
         } catch (SQLException sqle){
             String stacktrace = String.format("%d%n%s%n%s%n", sqle.getErrorCode(),
                                                 sqle.getSQLState(), sqle.getMessage());
-            DisplayDialog dialog = new DisplayDialog();
+            DisplayDialogs dialog = new DisplayDialogs();
             dialog.displaySimpleDialog("Fel vid sparning i databas", stacktrace);
         }
         return false;
@@ -72,7 +66,7 @@ public class TimeLogDao {
             sqle.printStackTrace();
             String stacktrace = String.format("%d%n%s%n%s%n", sqle.getErrorCode(),
                     sqle.getSQLState(), sqle.getMessage());
-            DisplayDialog dialog = new DisplayDialog();
+            DisplayDialogs dialog = new DisplayDialogs();
             dialog.displaySimpleDialog("Fel vid hämtning från databas", stacktrace);
             }
         return list;
@@ -97,7 +91,7 @@ public class TimeLogDao {
                     sqle.getSQLState(), sqle.getMessage());
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fx/SimpleStringDialog.fxml"));
             Parent root = loader.load();
-            DisplayDialog dialog = new DisplayDialog();
+            DisplayDialogs dialog = new DisplayDialogs();
             dialog.displaySimpleDialog("Fel vid hämtning från databas", stacktrace);       }
         return list;
     }
@@ -120,11 +114,12 @@ public class TimeLogDao {
             sqle.printStackTrace();
             String stacktrace = String.format("%d%n%s%n%s%n", sqle.getErrorCode(),
                     sqle.getSQLState(), sqle.getMessage());
-            DisplayDialog dialog = new DisplayDialog();
+            DisplayDialogs dialog = new DisplayDialogs();
             dialog.displaySimpleDialog("Fel vid hämtning från databas", stacktrace);
         }
         return list;
     }
+
     public double getTimeBalance() throws IOException {
         ResultSet resultSet = null;
         try (Connection connection = cm.openConnection();
@@ -136,7 +131,7 @@ public class TimeLogDao {
         } catch (SQLException sqle) {
             String stacktrace = String.format("%d%n%s%n%s%n", sqle.getErrorCode(),
                     sqle.getSQLState(), sqle.getMessage());
-            DisplayDialog dialog = new DisplayDialog();
+            DisplayDialogs dialog = new DisplayDialogs();
             dialog.displaySimpleDialog("Fel vid hämtning från databas", stacktrace);
 
         }
@@ -154,7 +149,7 @@ public class TimeLogDao {
         } catch (SQLException sqle){
             String stacktrace = String.format("%d%n%s%n%s%n", sqle.getErrorCode(),
                     sqle.getSQLState(), sqle.getMessage());
-            DisplayDialog dialog = new DisplayDialog();
+            DisplayDialogs dialog = new DisplayDialogs();
             dialog.displaySimpleDialog("Fel vid uppdatering", stacktrace);
         }
         return false;
@@ -169,7 +164,7 @@ public class TimeLogDao {
         } catch (SQLException sqle){
             String stacktrace = String.format("%d%n%s%n%s%n", sqle.getErrorCode(),
                     sqle.getSQLState(), sqle.getMessage());
-            DisplayDialog dialog = new DisplayDialog();
+            DisplayDialogs dialog = new DisplayDialogs();
             dialog.displaySimpleDialog("Fel vid radering från databas", stacktrace);
         }
         return false;

@@ -65,7 +65,7 @@
                   <Insets left="5.0" />
                </GridPane.margin>
             </Button>
-            <Button fx:id="buttonExport" mnemonicParsing="false" text="Exportera..." GridPane.columnIndex="3" GridPane.halignment="CENTER" GridPane.rowIndex="4" GridPane.valignment="CENTER">
+            <Button fx:id="buttonExport" mnemonicParsing="false" onAction="#setButtonExportAction" text="Exportera..." GridPane.columnIndex="3" GridPane.halignment="CENTER" GridPane.rowIndex="4" GridPane.valignment="CENTER">
                <GridPane.margin>
                   <Insets bottom="5.0" top="5.0" />
                </GridPane.margin>

@@ -12,7 +12,7 @@ import javafx.stage.Stage;
 import model.TimeLog;
 
 import javafx.event.ActionEvent;
-import utils.DisplayDialog;
+import utils.DisplayDialogs;
 import utils.Utils;
 
 import java.io.IOException;
@@ -86,7 +86,7 @@ public class EditTimeLogWindowController {
         timeLog.setWorkedHours(Double.parseDouble(textFieldWorkedHours.getText()));
         boolean isUpdateOK = flexController.updateTimeLog(timeLog);
         if (isUpdateOK) {
-            DisplayDialog dialog = new DisplayDialog();
+            DisplayDialogs dialog = new DisplayDialogs();
             dialog.displaySimpleDialog("Uppdatering klar",
                             "Uppdateringen lyckades, du kan nu se dina nya värden i tabellen.");
         }
@@ -101,11 +101,16 @@ public class EditTimeLogWindowController {
 
     @FXML
     private void setButtonDeleteAction(ActionEvent event) throws IOException {
-        boolean isDeleteOK = flexController.deleteTimeLog(timeLog);
-        if (isDeleteOK){
-            DisplayDialog dialog = new DisplayDialog();
-            dialog.displaySimpleDialog("Radering klar",
-                    "Raderingen lyckades, tidsregistreringen är nu borttagen.");
+        DisplayDialogs dialogs = new DisplayDialogs();
+        if (dialogs.displayConfirmDialog(String.format("Radera tidsregistrering för %s",
+                timeLog.getWorkDay().toString()), null,
+                "Vill du radera registreringen för detta datum?")) {
+            boolean isDeleteOK = flexController.deleteTimeLog(timeLog);
+            if (isDeleteOK){
+                DisplayDialogs dialog = new DisplayDialogs();
+                dialog.displaySimpleDialog("Radering klar",
+                        "Raderingen lyckades, tidsregistreringen är nu borttagen.");
+            }
         }
         Stage stage = (Stage) textAreaComment.getScene().getWindow();
         stage.close();
